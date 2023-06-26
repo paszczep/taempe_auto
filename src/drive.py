@@ -1,8 +1,6 @@
 from dotenv import dotenv_values
 from time import sleep
 from selenium import webdriver
-from webdriver_manager.firefox import GeckoDriverManager
-from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
@@ -25,6 +23,10 @@ class Control:
     setpoint: str
     database_time: str
 
+    @staticmethod
+    def fieldnames() -> tuple:
+        return tuple(Control.__annotations__.keys())
+
 
 dotenv_path = Path(__file__).parent.parent / 'env.txt'
 
@@ -36,7 +38,6 @@ class _ContainerDriver:
     url = env_values['CONTROL_URL']
     login = env_values['CONTROL_LOGIN']
     password = env_values['CONTROL_PASSWORD']
-    binary = FirefoxBinary(env_values['FIREFOX_BINARY_LOCATION'])
     headless = True
     debug = False
 
@@ -68,6 +69,7 @@ class _ContainerDriver:
         self.find_and_fill_input('Username', self.login)
         self.find_and_fill_input('Password', self.password)
         sign_in_button.click()
+        logging.info('signing in')
 
 
 class ContainerSettingsDriver(_ContainerDriver):
@@ -77,7 +79,7 @@ class ContainerSettingsDriver(_ContainerDriver):
         self.wait_for_element_and_click((By.PARTIAL_LINK_TEXT, 'Commands'))
 
     def _open_temperature_setting_modal(self):
-        sleep(self.wait_time)
+        sleep(self.wait_time//2)
         execute_button = self.driver.find_elements(By.CSS_SELECTOR, "a.k-grid-executeCommand.k-button")[2]
         execute_button.click()
 
@@ -91,6 +93,7 @@ class ContainerSettingsDriver(_ContainerDriver):
         self._open_temperature_setting_modal()
         self._enter_temperature_setting(temperature)
         self.driver.close()
+        logging.info(f'set temperature in {container} at {temperature}')
 
 
 class ContainerValuesDriver(_ContainerDriver):
@@ -109,7 +112,7 @@ class ContainerValuesDriver(_ContainerDriver):
         return value_cells
 
     @staticmethod
-    def _parse_value_table(names: list, all_values: list) -> list:
+    def _parse_value_table(names: list, all_values: list) -> list[Control]:
         names_number = len(names)
         values = all_values[names_number:]
         column_number = len(values) // names_number
@@ -133,5 +136,7 @@ class ContainerValuesDriver(_ContainerDriver):
         names = self._read_container_names()
         values = self._read_container_values()
         container_data = self._parse_value_table(names, values)
+        for container in container_data:
+            logging.info(f'{container.name} - power: {container.power}, set point: {container.setpoint}')
         self.driver.close()
         return container_data

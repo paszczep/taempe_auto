@@ -7,7 +7,11 @@ import sched
 from task import Task
 import logging
 
-logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
+logging.basicConfig(
+    format='%(asctime)s: %(message)s',
+    level=logging.INFO,
+    filename='raport.log',
+)
 
 
 SCHEDULE_FILE = './schedule.csv'
@@ -30,7 +34,7 @@ def set_temperature(container: str, temperature: str):
             container=container,
             temperature=temperature)
     except Exception as ex:
-        print(f'{ex}')
+        logging.warning(f' {ex}')
         sleep(60)
         set_temperature(container, temperature)
 
@@ -39,6 +43,7 @@ def schedule_temperature_setting(task: Task):
     scheduler = sched.scheduler(time, sleep)
     kwargs = {'container': task.container, 'temperature': task.temperature}
     scheduler.enterabs(task.timestamp, 0, set_temperature, kwargs=kwargs)
+    logging.info(f' scheduled {task.reported()}')
     scheduler.run()
 
 
