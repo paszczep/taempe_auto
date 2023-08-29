@@ -9,7 +9,7 @@ DATETIME_FORMAT = "%Y/%m/%d %H:%M"
 @dataclass
 class Task:
     container: str
-    temperature: str = '-22.0'
+    temperature: str = '0.0'
     timestamp: Union[int, str] = int(time()) - 600
 
     @property

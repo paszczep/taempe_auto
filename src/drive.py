@@ -63,6 +63,12 @@ class _ContainerDriver:
         input_field = self.wait_for_element_and_click((By.XPATH, f"//input[@placeholder='{field}']"))
         input_field.send_keys(input_value)
 
+    def click_not_now(self):
+        try:
+            self.wait_for_element_and_click((By.ID, 'btn_notnow'))
+        except NoSuchElementException:
+            pass
+
     def sign_in(self):
         self.driver.get(self.url)
         sign_in_button = self.wait_for_element_visibility((By.CSS_SELECTOR, 'button.btn.btn-primary'))
@@ -70,6 +76,7 @@ class _ContainerDriver:
         self.find_and_fill_input('Password', self.password)
         sign_in_button.click()
         logging.info('signing in')
+        self.click_not_now()
 
 
 class ContainerSettingsDriver(_ContainerDriver):
